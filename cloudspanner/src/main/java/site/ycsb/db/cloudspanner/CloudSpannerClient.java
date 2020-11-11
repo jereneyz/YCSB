@@ -32,6 +32,7 @@ import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.StructReader;
 import com.google.cloud.spanner.TimestampBound;
+import io.opencensus.exporter.stats.stackdriver.StackdriverStatsExporter;
 import site.ycsb.ByteIterator;
 import site.ycsb.Client;
 import site.ycsb.DB;
@@ -40,6 +41,7 @@ import site.ycsb.Status;
 import site.ycsb.StringByteIterator;
 import site.ycsb.workloads.CoreWorkload;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -182,6 +184,12 @@ public class CloudSpannerClient extends DB {
     synchronized (CLASS_LOCK) {
       if (dbClient != null) {
         return;
+      }
+      // Enable Opencensus exporters to export metrics to Stackdriver Monitoring.
+      try {
+        StackdriverStatsExporter.createAndRegister();
+      } catch (IOException e) {
+        LOGGER.log(Level.INFO, "Failed to initialize Stackdriver Monitoring for Opencensus");
       }
       Properties properties = getProperties();
       String host = properties.getProperty(CloudSpannerProperties.HOST);
